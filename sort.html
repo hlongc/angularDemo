@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>排序</title>
+    <script src="dist/js/jquery-1.12.4.js"></script>
+    <script src="angular.min.js"></script>
+    <script src="angular-route.min.js"></script>
+    <link rel="stylesheet" href="dist/css/bootstrap.css" />
+    <script src="dist/js/bootstrap.js"></script>
+    <style>
+        body{
+            font-family: "微软雅黑";
+            -moz-user-select: none;
+            -webkit-user-select: none; /*禁止用户选中文字*/
+            -ms-user-select: none;
+            -khtml-user-select: none;
+            user-select: none;
+            padding-left: 50px;
+        }
+        ul,li{
+            list-style: none;
+        }
+        button{
+            outline: none;
+        }
+        table td,table th{
+            text-align: center;
+        }
+        #progress1,#progress2{
+            width: 80%;
+        }
+        .bt{
+            text-align: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div ng-app="my-app">
+        <div ng-controller="first">
+           <form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <button class="btn btn-success">搜索</button>
+                <input type="text" class="form-control" placeholder={{ty}} ng-model="content">
+              </div>
+            </form>
+            <br/>
+            <br/>
+            <div>
+                <table class="table  table-bordered table-hover" style="width:80%">
+                    <caption class="bt">NBA Player Infomation</caption>
+                    <tr>
+                        <th ng-click="changeKind('name')">姓名</th>
+                        <th ng-click="changeKind('age')">年龄</th>
+                        <th ng-click="changeKind('salary')">年薪(万美元)</th>
+                        <th>操作</th>
+                    </tr>
+                    <tr ng-repeat="player in arr | filter:filterType(ty) | orderBy:kind" ng-class="colors(arr.length)" >
+                    <!--<tr ng-repeat="player in res = (arr|filter:filterType(ty))  | orderBy:kind" >-->
+                    <!--<tr ng-repeat="player in res = (arr|filter:filterType(ty))  | orderBy:kind" >-->
+                        <td>{{player.name}}</td>
+                        <td>{{player.age}}</td>
+                        <td>{{player.salary}}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" ng-click="delete(player)" >
+                                {{player.delete}}
+                            </button>
+                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#myModal" ng-click="edit(player)" >
+                                {{player.edit}}
+                            </button>
+                            <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#myModal" ng-click="adds()">
+                                {{player.add}}
+                            </button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            
+            <button class="btn btn-info" ng-click="changeTY('name')">按姓名查找</button>
+            <button class="btn btn-success" ng-click="changeTY('age')">按年龄查找</button>
+            <button class="btn btn-warning" ng-click="changeTY('salary')">按年薪查找</button>
+            <br/>
+            <br/>
+            <br/>
+            
+            
+            <!-- 模态框（Modal） -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" ng-show="bool">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">{{title}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <div class="input-group-addon">姓名</div>
+                                  <input class="form-control" type="text" placeholder="name" id="ename" >
+                                </div>
+                          </div>
+                          <div class="form-group">
+                            <div class="input-group">
+                              <div class="input-group-addon">年龄</div>
+                              <input class="form-control" type="text" placeholder="age" id="eage" >
+                            </div>
+                          </div>
+                          <div class="form-group">
+                            <div class="input-group">
+                              <div class="input-group-addon">年薪</div>
+                              <input class="form-control" type="text" placeholder="salary" id="esalary" >
+                            </div>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="close()">关闭</button>
+                            <button type="button" class="btn btn-primary" ng-click="save()">提交</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+            </div>
+            
+            <!--进度条-->
+            <div class="progress" id="progress1">
+              <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
+                50%
+              </div>
+            </div>
+            
+            <div class="progress" id="progress2">
+              <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%">
+                <span class="sr-only">45% Complete</span>
+              </div>
+            </div>
+            
+            
+            
+        </div>
+    </div>
+    <script>
+        var myapp = angular.module("my-app",[]);
+        myapp.controller("first",["$scope","$http","$filter",function($scope,$http,$filter){
+            $http.get("data.json").success(function(data){
+                $scope.arr = data;
+            });
+            /*$scope.result = $filter($scope.objs)($scope.arr);*/
+            
+            $scope.objs=null;
+            $scope.bool=false;
+            $scope.ty = 'name';
+            $scope.kind='name';
+            $scope.saveindex=null;
+            $scope.opa = null;
+            $scope.newVal=null;
+            $scope.filterType = function(ty){
+                var obj = {};
+                obj[ty]=this.content;
+                return obj;
+            }
+            
+            
+            $scope.changeTY = function(type){
+                $scope.ty = type;
+            }
+
+            $scope.changeKind=function(kd){
+                $scope.kind = kd;
+            }
+            $scope.delete=function(player){
+                var index = $scope.arr.indexOf(player);
+                var deletes=$scope.arr.splice(index,1);
+                $http.post("data.json",deletes).success(function(data){
+                    //console.log(data);
+                });
+            }
+            
+            $scope.edit=function(player){
+                var index = $scope.arr.indexOf(player);
+                $scope.bool=true;
+                $scope.opa="edit";
+                $scope.title="修改球星数据";
+                $scope.saveindex=index;
+                var name =$scope.arr[index]["name"];
+                var age=$scope.arr[index]["age"];
+                var salary=$scope.arr[index]["salary"];
+                angular.element(document.querySelector('#ename')).val(name);
+                angular.element(document.querySelector('#eage')).val(age);
+                angular.element(document.querySelector('#esalary')).val(salary);
+            }
+            $scope.adds=function(){
+                $scope.bool=true;
+                $scope.opa="add";
+                $scope.title="添加球星数据";
+            }
+             
+            $scope.save=function(){
+                $scope.bool=false;
+                if($scope.opa=="add"){
+                    
+                    var Name=angular.element(document.querySelector('#ename')).val();
+                    var Age=angular.element(document.querySelector('#eage')).val();
+                    var Salary=angular.element(document.querySelector('#esalary')).val();
+                    var Ages=Age-0;
+                    var Salarys=Salary-0;
+                    var obj = {
+                        "name":Name,
+                        "age":Ages,
+                        "salary":Salarys,
+                        "delete":"删除",
+                        "edit":"修改",
+                        "add":"添加"
+                    };
+                    $scope.arr.push(obj);
+                    $http.post("data.json",obj).success(function(data){
+                        //console.log(data);
+                    });
+                    
+                }
+                else{
+                    $scope.arr[$scope.saveindex]["name"]=angular.element(document.querySelector('#ename')).val();
+                    $scope.arr[$scope.saveindex]["age"]=angular.element(document.querySelector('#eage')).val()-0;
+                    $scope.arr[$scope.saveindex]["salary"]=angular.element(document.querySelector('#esalary')).val()-0;
+                }
+                $scope.close();
+            }
+            $scope.close=function(){
+                angular.element(document.querySelector('#ename')).val("");
+                angular.element(document.querySelector('#eage')).val("");
+                angular.element(document.querySelector('#esalary')).val("");
+            }
+    
+            
+        }]);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

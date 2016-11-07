@@ -1,0 +1,7 @@
+[
+    {"name":"Kobe","age":38,"salary":2500,"delete":"删除","edit":"修改","add":"添加"},
+    {"name":"Mikan","age":62,"salary":800,"delete":"删除","edit":"修改","add":"添加"},
+    {"name":"Schayes","age":74,"salary":900,"delete":"删除","edit":"修改","add":"添加"},
+    {"name":"Wade","age":33,"salary":2300,"delete":"删除","edit":"修改","add":"添加"},
+    {"name":"Harden","age":27,"salary":2000,"delete":"删除","edit":"修改","add":"添加"}
+]
